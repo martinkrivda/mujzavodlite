@@ -8,18 +8,27 @@ if (! empty($_POST) && isset($_POST['signin']) && $_SERVER["REQUEST_METHOD"] == 
     
     // Escape username to protect against SQL injections
     try {
-        $username = $conn->quote($_POST['username'], PDO::FETCH_ASSOC);
-        $result = $conn->query("SELECT * FROM LOGIN WHERE USERNAME = $username AND ACTIVE = 1 LIMIT 1", PDO::FETCH_ASSOC);
+        $username = $_POST['username'];
+        $stmt = $conn->prepare("SELECT * FROM LOGIN WHERE USERNAME = :USERNAME AND ACTIVE = 1 LIMIT 1");
+        $stmt->bindParam(":USERNAME", $username);
+        $stmt->execute();
     } catch (Exception $e) {
         die("Oh noes! There's an error in the query!" . $e->getMessage());
     }
-    if ($result->fetchColumn() == 0) { // User doesn't exist
+    if ($stmt->fetchColumn() == 0) { // User doesn't exist
         $_SESSION['message'] = "Uživatel s tímto uživatelským jménem neexistuje!";
         header("location: login.php?success=wronguser");
         exit();
     } else { // User exists
-        $result = $conn->query("SELECT * FROM LOGIN WHERE USERNAME = $username AND ACTIVE = 1 LIMIT 1", PDO::FETCH_ASSOC) or die($conn->error());
-        $user = @$result->fetchAll()[0];
+        try {
+            $stmt = $conn->prepare("SELECT * FROM LOGIN WHERE USERNAME = :USERNAME AND ACTIVE = 1 LIMIT 1");
+            $stmt->bindParam(":USERNAME", $username);
+            $stmt->execute();
+        } catch (PDOException $e) {
+            die("Oh noes! There's an error in the query!" . $e->getMessage());
+        }
+        
+        $user = @$stmt->fetchAll(PDO::FETCH_ASSOC)[0];
         if (password_verify(trim($_POST['password']), $user['PASSWORD'])) {
             
             $_SESSION['userID'] = $user['LOGIN_ID'];

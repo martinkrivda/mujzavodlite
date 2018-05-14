@@ -6,8 +6,6 @@ require_once ('db_connection.php');
 // pristup jen pro prihlaseneho uzivatele
 require 'userrequired.php';
 
-include_once('pages/function.php');
-
 ?>
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
@@ -48,8 +46,6 @@ include_once('pages/function.php');
 	rel='stylesheet' type='text/css'>
 
 <!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/html5shiv/3.7.3/html5shiv.min.js"></script> -->
-<script src="assets/js/sweetalert.min.js"></script>
-<link rel="stylesheet" type="text/css" href="assets/css/sweetalert.min.css">
 
 </head>
 <body>
@@ -308,18 +304,15 @@ include_once('pages/function.php');
 								<strong class="card-title">Závodníci</strong>
 							</div>
 							<div class="card-body">
-								<span id="result"></span>
 								<!-- Button trigger modal -->
-								<button type="button" id="addRunnerBtn" class="btn btn-secondary mb-1"
-									data-toggle="modal" data-target="#addRunner">
-									<i class="fa fa-plus"></i> Přidat závodníka
-								</button>
+								<button type="button" class="btn btn-secondary mb-1"
+									data-toggle="modal" data-target="#addRunner">Přidat závodníka</button>
 								<!-- Table with runners -->
 								<div class="table-responsive">
 									<table id="runners-table"
-										class="table table-striped table-bordered table-hover">
+										class="table table-striped table-bordered">
 										<thead>
-											<tr class="tableheader">
+											<tr>
 												<th>ID</th>
 												<th>Jméno</th>
 												<th>Příjmení</th>
@@ -328,8 +321,6 @@ include_once('pages/function.php');
 												<th>Země</th>
 												<th>E-mail</th>
 												<th>Telefon</th>
-												<th width="5%">Upravit</th>
-												<th width="5%">Smazat</th>
 											</tr>
 										</thead>
 										<tbody></tbody>
@@ -350,7 +341,7 @@ include_once('pages/function.php');
 											</button>
 										</div>
 										<form name="addRunnerForm" id="addRunnerForm" action=""
-											method="POST" enctype="multipart/form-data">
+											method="POST">
 											<div class="modal-body">
 												<div class="row">
 													<div class="col-6">
@@ -404,7 +395,7 @@ include_once('pages/function.php');
 														<div class="form-group">
 															<label for="club" class="form-control-label">Klub</label><input
 																type="text" id="club" name="club"
-																pattern="[a-zA-Z \-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ\.]{1,70}"
+																pattern="[a-zA-Z \-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ]{1,70}"
 																placeholder="Vložte název klubu"
 																value="<?php echo htmlspecialchars(@$_POST['club']);?>"
 																class="form-control" maxlength="70" />
@@ -435,20 +426,34 @@ include_once('pages/function.php');
 													<div class="col-5">
 														<div class="form-group">
 															<label for="country" class="form-control-label">Země</label>
-															<select name="country" id="country" style="height: calc(2.25rem + 2px);" class="form-control">
-																<option>Prosím vyberte</option>
-																<?php echo fill_country(); ?>
-														</select>
+															<input list="country" name="country" class="form-control"
+																placeholder="Vložte stát"
+																value="<?php echo htmlspecialchars(@$_POST['country']);?>"
+																maxlength="50" />
+															<datalist id="country">
+																<option value="Česká republika">
+																
+																
+																<option value="Slovenská republika">
+																
+																
+																<option value="Bangladéš">
+																
+																
+																<option value="Opera">
+																
+																
+																<option value="Safari">
+															
+															</datalist>
 														</div>
 													</div>
 												</div>
 											</div>
 											<div class="modal-footer">
-												<input type="hidden" name="runner_id" id="runner_id" value=""/> <input
-													type="hidden" name="operation" id="operation" value="Add"/>
 												<button type="button" class="btn btn-secondary"
 													data-dismiss="modal">Cancel</button>
-												<button type="submit" class="btn btn-primary">Confirm</button>
+												<button type="button" class="btn btn-primary">Confirm</button>
 											</div>
 										</form>
 									</div>
@@ -485,9 +490,8 @@ include_once('pages/function.php');
 
 	<!-- Right Panel -->
 
-	
 	<!-- <script src="assets/js/vendor/jquery-2.1.4.min.js"></script> -->
-<script src="assets/js/vendor/jquery-3.3.1.js"></script>
+	<script src="assets/js/vendor/jquery-3.3.1.js"></script>
 
 
 	<script src="assets/js/main.js"></script>
@@ -511,120 +515,70 @@ include_once('pages/function.php');
 	<script src="assets/js/lib/data-table/buttons.html5.min.js"></script>
 	<script src="assets/js/lib/data-table/buttons.print.min.js"></script>
 	<script src="assets/js/lib/data-table/buttons.colVis.min.js"></script>
-	<script src="assets/js/lib/data-table/datatables-init.js"></script> 
+	<script src="assets/js/lib/data-table/datatables-init.js"></script>
 
 
 
-	<script type="text/javascript" language="javascript">
-        $(document).ready(function(){
-        	$('#addRunnerBtn').click(function(){
-        		  $('#addRunnerForm')[0].reset();
-        		  $('.modal-title').text("Přidat závodníka");
-        		  $('#action').val("Add");
-        		  $('#operation').val("Add");
-        		 });
-         
-         var dataTable = $('#runners-table').DataTable({
-          "processing":true,
-          "serverSide":true,
-          "order":[],
-          "ajax":{
-           url:"pages/runnerfetch_ajax.php",
-           type:"POST"
-          },
-          "columnDefs":[
-        	   {
-        	    "targets":[8, 9],
-        	    "orderable":false,
-        	   },
-        	  ],
-        
-         });
-        
-         $(document).on('submit', '#addRunnerForm', function(event){
-          event.preventDefault();
-          var firstName = $('#firstname').val();
-          var lastName = $('#lastname').val();
-          var vintage = $('#vintage').val();
-          var gender = $('#gender').val();
-          var club = $('#club').val();
-          var email = $('#email').val();
-          var phone = $('#phone').val();
-          var country = $('#country').val();
-          if(firstName != '' && lastName != '' && vintage != '' && gender != '')
-          {
-           $.ajax({
-            url:"pages/runnerinsert_ajax.php",
-            method:'POST',
-            data:new FormData(this),
-            contentType:false,
-            processData:false,
-            success:function(data)
-            {
-        		$('#result').html(data);
-        		$("#result").delay(2400).fadeOut("slow");
-             $('#addRunnerForm')[0].reset();        
-             $('#addRunner').modal('hide');
-             $("[data-dismiss=modal]").trigger({ type: "click" });
-             dataTable.ajax.reload();
-            }
-           });
-          }
-          else
-          {
-           alert("Fields are Required");
-          }
-         });
-         
-         $(document).on('click', '.update', function(){
-          var runner_id = $(this).attr("id");
-          $.ajax({
-           url:"pages/runnerfetch_single.php",
-           method:"POST",
-           data:{runner_id:runner_id},
-           dataType:"json",
-           success:function(data)
-           {
-            $('#addRunner').modal('show');
-            $('#firstname').val(data.firstName);
-            $('#lastname').val(data.lastName);
-            $('#vintage').val(data.vintage);
-            $('#gender').val(data.gender);
-            $('#club').val(data.club);
-            $('#email').val(data.email);
-            $('#phone').val(data.phone);
-            $('#country').val(data.country_code);
-            $('.modal-title').text("Upravit závodníka");
-            $('#runner_id').val(runner_id);
-            $('#action').val("Edit");
-            $('#operation').val("Edit");
-           }
-          })
-         });
-         
-         $(document).on('click', '.delete', function(){
-          var runner_id = $(this).attr("id");
-          if(confirm("Are you sure you want to delete this?"))
-          {
-           $.ajax({
-            url:"pages/runnerdelete_ajax.php",
-            method:"POST",
-            data:{runner_id:runner_id},
-            success:function(data)
-            {
-             alert(data);
-             dataTable.ajax.reload();
-            }
-           });
-          }
-          else
-          {
-           return false; 
-          }
-         });
-         
-         
-        });
-    </script>
+	<script type="text/javascript">
+	 
+	 $(document).ready(function() {
+		    $('#runners-table').DataTable( {
+		        "ajax": "pages/runnerlist_ajax.php?p=view",
+		        "columns": [
+		            { "data": "runner_ID" },
+		            { "data": "firstName" },
+		            { "data": "lastName" },
+		            { "data": "vintage" },
+		            { "data": "gender" },
+		            { "data": "country" },
+		            { "data": "email" },
+		            { "data": "phone" }
+		        ]
+		    } );
+		} );
+
+	 $(document).ready(function tableData(){
+	$('#runners-table').Tabledit({
+	    url: 'pages/runnerlist_ajax.php',
+	    method: 'POST',
+	    rowIdentifier: 'data-id',
+	    eventType: 'dblclick',
+	    editButton: true,
+	    deleteButton: true,
+	    hideIdentifier: false,
+	    restoreButton: false,
+	    columns: {
+	        identifier: [0, 'runner_ID'],
+	        editable: [[1, 'firstName'], [2, 'lastName'], [3, 'vintage'], [4, 'gender', '{"Male": "Male", "Female": "Female"}'], [5, 'country'], [6, 'email'], [7, 'phone']]
+	    },
+	    onDraw: function() {
+	        console.log('onDraw()');
+	    },
+	    onSuccess: function(data, textStatus, jqXHR) {
+	        console.log('onSuccess(data, textStatus, jqXHR)');
+	        console.log(data);
+	        console.log(textStatus);
+	        console.log(jqXHR);
+	        viewData()
+	    },
+	    onFail: function(jqXHR, textStatus, errorThrown) {
+	        console.log('onFail(jqXHR, textStatus, errorThrown)');
+	        console.log(jqXHR);
+	        console.log(textStatus);
+	        console.log(errorThrown);
+	    },
+	    onAlways: function() {
+	        console.log('onAlways()');
+	    },
+	    onAjax: function(action, serialize) {
+	        console.log('onAjax(action, serialize)');
+	        console.log(action);
+	        console.log(serialize);
+	    }
+	});
+});
+
+</script>
+
 </body>
 </html>

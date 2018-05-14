@@ -1,0 +1,13 @@
+{
+  "data": [
+    {
+      "runner_ID": "1",
+      "firstName": "Martin",
+      "lastName": "Křivda",
+      "vintage": "1995",
+      "gender": "Male",
+      "country": "CZ",
+      "email": "martinkrivda@seznam.cz",
+      "phone": "5421"
+    }]
+}
