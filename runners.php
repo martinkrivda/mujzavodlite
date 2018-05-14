@@ -6,7 +6,7 @@ require_once ('db_connection.php');
 // pristup jen pro prihlaseneho uzivatele
 require 'userrequired.php';
 
-include_once('pages/function.php');
+include_once ('pages/function.php');
 
 ?>
 <!DOCTYPE html>
@@ -48,8 +48,6 @@ include_once('pages/function.php');
 	rel='stylesheet' type='text/css'>
 
 <!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/html5shiv/3.7.3/html5shiv.min.js"></script> -->
-<script src="assets/js/sweetalert.min.js"></script>
-<link rel="stylesheet" type="text/css" href="assets/css/sweetalert.min.css">
 
 </head>
 <body>
@@ -310,8 +308,9 @@ include_once('pages/function.php');
 							<div class="card-body">
 								<span id="result"></span>
 								<!-- Button trigger modal -->
-								<button type="button" id="addRunnerBtn" class="btn btn-secondary mb-1"
-									data-toggle="modal" data-target="#addRunner">
+								<button type="button" id="addRunnerBtn"
+									class="btn btn-secondary mb-1" data-toggle="modal"
+									data-target="#addRunner">
 									<i class="fa fa-plus"></i> Přidat závodníka
 								</button>
 								<!-- Table with runners -->
@@ -435,7 +434,9 @@ include_once('pages/function.php');
 													<div class="col-5">
 														<div class="form-group">
 															<label for="country" class="form-control-label">Země</label>
-															<select name="country" id="country" style="height: calc(2.25rem + 2px);" class="form-control">
+															<select name="country" id="country"
+																style="height: calc(2.25rem + 2px);"
+																class="form-control">
 																<option>Prosím vyberte</option>
 																<?php echo fill_country(); ?>
 														</select>
@@ -444,8 +445,9 @@ include_once('pages/function.php');
 												</div>
 											</div>
 											<div class="modal-footer">
-												<input type="hidden" name="runner_id" id="runner_id" value=""/> <input
-													type="hidden" name="operation" id="operation" value="Add"/>
+												<input type="hidden" name="runner_id" id="runner_id"
+													value="" /> <input type="hidden" name="operation"
+													id="operation" value="Add" />
 												<button type="button" class="btn btn-secondary"
 													data-dismiss="modal">Cancel</button>
 												<button type="submit" class="btn btn-primary">Confirm</button>
@@ -485,9 +487,9 @@ include_once('pages/function.php');
 
 	<!-- Right Panel -->
 
-	
+
 	<!-- <script src="assets/js/vendor/jquery-2.1.4.min.js"></script> -->
-<script src="assets/js/vendor/jquery-3.3.1.js"></script>
+	<script src="assets/js/vendor/jquery-3.3.1.js"></script>
 
 
 	<script src="assets/js/main.js"></script>
@@ -511,12 +513,13 @@ include_once('pages/function.php');
 	<script src="assets/js/lib/data-table/buttons.html5.min.js"></script>
 	<script src="assets/js/lib/data-table/buttons.print.min.js"></script>
 	<script src="assets/js/lib/data-table/buttons.colVis.min.js"></script>
-	<script src="assets/js/lib/data-table/datatables-init.js"></script> 
+	<script src="assets/js/lib/data-table/datatables-init.js"></script>
+	<script src="assets/js/sweetalert2.all.js"></script>
 
 
 
 	<script type="text/javascript" language="javascript">
-        $(document).ready(function(){
+        $(document).ready(function(){     
         	$('#addRunnerBtn').click(function(){
         		  $('#addRunnerForm')[0].reset();
         		  $('.modal-title').text("Přidat závodníka");
@@ -524,22 +527,22 @@ include_once('pages/function.php');
         		  $('#operation').val("Add");
         		 });
          
-         var dataTable = $('#runners-table').DataTable({
-          "processing":true,
-          "serverSide":true,
-          "order":[],
-          "ajax":{
-           url:"pages/runnerfetch_ajax.php",
-           type:"POST"
-          },
-          "columnDefs":[
-        	   {
-        	    "targets":[8, 9],
-        	    "orderable":false,
-        	   },
-        	  ],
-        
-         });
+        	var dataTable = $('#runners-table').DataTable({
+                "processing":true,
+                "serverSide":true,
+                "order":[],
+                "ajax":{
+                 url:"pages/runnerfetch_ajax.php",
+                 type:"POST"
+                },
+                "columnDefs":[
+              	   {
+              	    "targets":[8, 9],
+              	    "orderable":false,
+              	   },
+              	  ],
+              
+               });
         
          $(document).on('submit', '#addRunnerForm', function(event){
           event.preventDefault();
@@ -602,29 +605,44 @@ include_once('pages/function.php');
           })
          });
          
-         $(document).on('click', '.delete', function(){
+         $(document).on('click', '.delete', function(e){
           var runner_id = $(this).attr("id");
-          if(confirm("Are you sure you want to delete this?"))
-          {
-           $.ajax({
-            url:"pages/runnerdelete_ajax.php",
-            method:"POST",
-            data:{runner_id:runner_id},
-            success:function(data)
-            {
-             alert(data);
-             dataTable.ajax.reload();
-            }
-           });
-          }
-          else
-          {
-           return false; 
-          }
+          SwalDelete(runner_id);
+          e.preventDefault();
          });
-         
-         
         });
+         function SwalDelete(runner_id){
+             swal({
+                 title: 'Odstranit závodníka?',
+                 text: "Odstranit závodníka s ID: "+runner_id+" ?",
+                 type: 'warning',
+                 showCancelButton: true,
+                 confirmButtonColor: '#3085d6',
+                 cancelButtonColor: '#d33',
+                 confirmButtonText: 'Odstranit',
+                 showLoaderOnConfirm: true,
+    
+                preConfirm: function() {
+                    return new Promise(function(resolve){
+                    	$.ajax({
+                            url:'pages/runnerdelete_ajax.php',
+                            method:'POST',
+                            data:{runner_id:runner_id},
+                            dataType: 'json'
+                    	})
+                    	.done(function(response){
+                        	swal('Deleted',response.message, response.status)
+                        	$('#runners-table').DataTable().ajax.reload();
+                        	
+                    	})
+                    	.fail(function(){
+                        	swal('Oops...', 'Something went wrong with ajax !', 'error');
+                    	});
+                });
+            },
+            allowOutsideClick: false
+         });
+        }
     </script>
 </body>
 </html>

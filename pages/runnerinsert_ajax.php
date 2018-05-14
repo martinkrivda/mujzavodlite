@@ -13,7 +13,7 @@ if (isset($_POST["operation"])) {
             $stmt->bindParam(':PHONE', $_POST["phone"], PDO::PARAM_STR);
             $stmt->bindParam(':COUNTRY_CODE', $_POST["country"], PDO::PARAM_STR);
             $result = $stmt->execute();
-        } catch (PDOException $e){
+        } catch (PDOException $e) {
             die("Error: " . $e->getMessage());
         }
         
@@ -27,7 +27,7 @@ if (isset($_POST["operation"])) {
         }
     }
     if ($_POST["operation"] == "Edit") {
-        try{
+        try {
             $stmt = $conn->prepare("UPDATE RUNNER SET FIRSTNAME = :FIRSTNAME, LASTNAME = :LASTNAME, VINTAGE = :VINTAGE, GENDER = :GENDER, EMAIL = :EMAIL, PHONE = :PHONE, COUNTRY_CODE = :COUNTRY_CODE WHERE RUNNER_ID = :RUNNER_ID");
             $stmt->bindParam(':FIRSTNAME', $_POST["firstname"], PDO::PARAM_STR);
             $stmt->bindParam(':LASTNAME', $_POST["lastname"], PDO::PARAM_STR);
@@ -38,7 +38,7 @@ if (isset($_POST["operation"])) {
             $stmt->bindParam(':COUNTRY_CODE', $_POST["country"], PDO::PARAM_STR);
             $stmt->bindParam(':RUNNER_ID', $_POST["runner_id"], PDO::PARAM_INT);
             $result = $stmt->execute();
-        }catch (PDOException $e){
+        } catch (PDOException $e) {
             die("Error: " . $e->getMessage());
         }
         if (! empty($result)) {
