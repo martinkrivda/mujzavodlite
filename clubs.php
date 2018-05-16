@@ -279,7 +279,7 @@ include_once ('pages/function.php');
 			<div class="col-sm-4">
 				<div class="page-header float-left">
 					<div class="page-title">
-						<h1>Evidence závodníků</h1>
+						<h1>Evidence klubů</h1>
 					</div>
 				</div>
 			</div>
@@ -289,7 +289,7 @@ include_once ('pages/function.php');
 						<ol class="breadcrumb text-right">
 							<li><a href="index.php">Dashboard</a></li>
 							<li><a href="#">Adresář</a></li>
-							<li class="active">Závodníci</li>
+							<li class="active">Kluby</li>
 						</ol>
 					</div>
 				</div>
@@ -303,28 +303,32 @@ include_once ('pages/function.php');
 					<div class="col-md-12">
 						<div class="card">
 							<div class="card-header">
-								<strong class="card-title">Závodníci</strong>
+								<strong class="card-title">Kluby</strong>
 							</div>
 							<div class="card-body">
 								<span id="result"></span>
 								<!-- Button trigger modal -->
-								<button type="button" id="addRunnerBtn"
+								<button type="button" id="addClubBtn"
 									class="btn btn-secondary mb-1" data-toggle="modal"
-									data-target="#addRunner">
-									<i class="fa fa-plus"></i> Přidat závodníka
+									data-target="#addClub">
+									<i class="fa fa-plus"></i> Přidat klub
 								</button>
 								<!-- Table with runners -->
 								<div class="table-responsive">
-									<table id="runners-table"
+									<table id="clubs-table"
 										class="table table-striped table-bordered table-hover">
 										<thead>
 											<tr class="tableheader">
 												<th>ID</th>
-												<th>Jméno</th>
-												<th>Příjmení</th>
-												<th>Ročník</th>
-												<th>Pohlaví</th>
+												<th>Název</th>
+												<th>Zkratka</th>
+												<th>Ulice</th>
+												<th>Město</th>
+												<th>PSČ</th>
 												<th>Země</th>
+												<th>IČO</th>
+												<th>DIČ</th>
+												<th>Web</th>
 												<th>E-mail</th>
 												<th>Telefon</th>
 												<th width="5%">Upravit</th>
@@ -336,80 +340,80 @@ include_once ('pages/function.php');
 									<div id="output"></div>
 								</div>
 							</div>
-							<div class="modal fade" id="addRunner" tabindex="-1"
-								role="dialog" aria-labelledby="addRunnerLabel"
-								aria-hidden="true">
+							<div class="modal fade" id="addClub" tabindex="-1" role="dialog"
+								aria-labelledby="addClubLabel" aria-hidden="true">
 								<div class="modal-dialog modal-lg" role="document">
 									<div class="modal-content">
 										<div class="modal-header">
-											<h5 class="modal-title" id="addRunnerLabel">Přidat závodníka</h5>
+											<h5 class="modal-title" id="addClubLabel">Přidat klub</h5>
 											<button type="button" class="close" data-dismiss="modal"
 												aria-label="Close">
 												<span aria-hidden="true">&times;</span>
 											</button>
 										</div>
-										<form name="addRunnerForm" id="addRunnerForm" action=""
+										<form name="addClubForm" id="addClubForm" action=""
 											method="POST" enctype="multipart/form-data">
 											<div class="modal-body">
 												<div class="row">
-													<div class="col-6">
+													<div class="col-5">
 														<div class="form-group">
-															<label for="firstname" class=" form-control-label">Křestní
-																jméno</label><input type="text" id="firstname"
-																name="firstname" placeholder="Vložte jméno"
-																pattern="[a-zA-Z \-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ]{1,50}"
-																value="<?php echo htmlspecialchars(@$_POST['firstname']);?>"
-																class="form-control" maxlength="50" required />
+															<label for="clubname" class=" form-control-label">Název
+																klubu</label> <input type="text" id="clubname"
+																name="clubname" placeholder="Vložte název klubu"
+																pattern="[a-zA-Z \.\-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ]{1,70}"
+																value="<?php echo htmlspecialchars(@$_POST['clubname']);?>"
+																class="form-control" maxlength="70" required />
 														</div>
 													</div>
-													<div class="col-6">
+													<div class="col-4">
 														<div class="form-group">
-															<label for="lastname" class=" form-control-label">Příjmení</label><input
-																type="text" id="lastname" name="lastname"
-																placeholder="Vložte příjmení"
-																pattern="[a-zA-Z \-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ]{1,100}"
-																value="<?php echo htmlspecialchars(@$_POST['lastname']);?>"
-																class="form-control" maxlength="100" required />
+															<label for="clubname2" class=" form-control-label">Druhý
+																název</label><input type="text" id="clubname2"
+																name="clubname2" placeholder="Vložte druhý název"
+																pattern="[a-zA-Z \.\-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ]{1,50}"
+																value="<?php echo htmlspecialchars(@$_POST['clubname2']);?>"
+																class="form-control" maxlength="50" />
+														</div>
+													</div>
+													<div class="col-3">
+														<div class="form-group">
+															<label for="clubcode" class=" form-control-label">Zkratka</label><input
+																type="text" id="clubcode" name="clubcode"
+																placeholder="Vložte zkratku"
+																pattern="[a-zA-Z\-0-9]{3,10}"
+																value="<?php echo htmlspecialchars(@$_POST['clubcode']);?>"
+																class="form-control" maxlength="10" required />
 														</div>
 													</div>
 												</div>
 												<div class="row">
-													<div class="col-3">
+													<div class="col-5">
 														<div class="form-group">
-															<label for="vintage" class=" form-control-label">Ročník</label><input
-																type="number" id="vintage" name="vintage" min="1900"
-																max="<?php echo date("Y"); ?>" step="1"
-																placeholder="Rok narození"
-																value="<?php echo htmlspecialchars(@$_POST['vintage']);?>"
-																class="form-control" required />
+															<label for="street" class=" form-control-label">Ulice</label><input
+																type="text" id="street" name="street"
+																placeholder="Vložte ulici"
+																pattern="[a-zA-Z \.\-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ0-9]{1,30}"
+																value="<?php echo htmlspecialchars(@$_POST['street']);?>"
+																class="form-control" maxlength="30" />
 														</div>
 													</div>
 													<div class="col-4">
-
-
 														<div class="form-group">
-															<label for="gender" class="form-control-label">Pohlaví</label><select
-																name="gender" id="gender"
-																style="height: calc(2.25rem + 2px);"
-																class="form-control">
-																<option value="0">Prosím vyberte</option>
-																<option value="Male">Muž</option>
-																<option value="Female">Žena</option>
-															</select>
-
+															<label for="city" class=" form-control-label">Město</label><input
+																type="text" id="city" name="city"
+																placeholder="Vložte město"
+																pattern="[a-zA-Z \.\-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ0-9]{1,30}"
+																value="<?php echo htmlspecialchars(@$_POST['city']);?>"
+																class="form-control" maxlength="30" />
 														</div>
 													</div>
-													<div class="col-5">
+													<div class="col-3">
 														<div class="form-group">
-															<label for="club" class="form-control-label">Klub</label><input
-																type="text" id="club" name="club" list="clubs"
-																pattern="[a-zA-Z \-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ\.]{1,70}"
-																placeholder="Vložte název klubu"
-																value="<?php echo htmlspecialchars(@$_POST['club']);?>"
-																class="form-control" maxlength="70" />
-															<datalist id="clubs">
-																	<?php echo fill_club(); ?>
-																</datalist>
+															<label for="zip" class="form-control-label">PSČ</label><input
+																type="text" id="zip" name="zip" pattern="\d{3} ?\d{2}"
+																placeholder="Vložte PSČ"
+																value="<?php echo htmlspecialchars(@$_POST['zip']);?>"
+																class="form-control" maxlength="6" />
 														</div>
 													</div>
 												</div>
@@ -434,6 +438,26 @@ include_once ('pages/function.php');
 													</div>
 												</div>
 												<div class="row">
+													<div class="col-6">
+														<div class="form-group">
+															<label for="taxid" class="form-control-label">IČO</label><input
+																type="text" id="taxid" name="taxid"
+																placeholder="Vložte IČO" pattern="^\d{8}$"
+																value="<?php echo htmlspecialchars(@$_POST['taxid']);?>"
+																class="form-control" maxlength="8" />
+														</div>
+													</div>
+													<div class="col-6">
+														<div class="form-group">
+															<label for="vatid" class="form-control-label">DIČ</label><input
+																type="text" id="vatid" name="vatid"
+																placeholder="Vložte DIČ" pattern="^(CZ|SK)\d{8}$"
+																value="<?php echo htmlspecialchars(@$_POST['vatid']);?>"
+																class="form-control" maxlength="10" />
+														</div>
+													</div>
+												</div>
+												<div class="row">
 													<div class="col-5">
 														<div class="form-group">
 															<label for="country" class="form-control-label">Země</label>
@@ -445,16 +469,25 @@ include_once ('pages/function.php');
 														</select>
 														</div>
 													</div>
+													<div class="col-5">
+														<div class="form-group">
+															<label for="webpage" class=" form-control-label">Web</label><input
+																type="text" id="webpage" name="webpage"
+																placeholder="Vložte webovou stránku"
+																pattern="^(http\:\/\/|https\:\/\/)?([a-z0-9][a-z0-9\-]*\.)+[a-z0-9][a-z0-9\-]*$"
+																value="<?php echo htmlspecialchars(@$_POST['webpage']);?>"
+																class="form-control" maxlength="50" />
+														</div>
+													</div>
 												</div>
 											</div>
 											<div class="modal-footer">
-												<input type="hidden" name="runner_id" id="runner_id"
-													value="" /> <input type="hidden" name="operation"
-													id="operation" value="Add" />
+												<input type="hidden" name="club_id" id="club_id" value="" />
+												<input type="hidden" name="operation" id="operation"
+													value="Add" />
 												<button type="button" class="btn btn-secondary"
-													data-dismiss="modal">Cancel</button>
-												<button type="submit" id="save" name="save"
-													class="btn btn-primary">Confirm</button>
+													data-dismiss="modal">Zrušit</button>
+												<button type="submit" class="btn btn-primary">Uložit</button>
 											</div>
 										</form>
 									</div>
@@ -524,44 +557,48 @@ include_once ('pages/function.php');
 
 	<script type="text/javascript" language="javascript">
         $(document).ready(function(){     
-        	$('#addRunnerBtn').click(function(){
-        		  $('#addRunnerForm')[0].reset();
-        		  $('.modal-title').text("Přidat závodníka");
+        	$('#addClubBtn').click(function(){
+        		  $('#addClubForm')[0].reset();
+        		  $('.modal-title').text("Přidat klub");
         		  $('#action').val("Add");
         		  $('#operation').val("Add");
         		 });
          
-        	var dataTable = $('#runners-table').DataTable({
+        	var dataTable = $('#clubs-table').DataTable({
                 "processing":true,
                 "serverSide":true,
                 "order":[],
                 "ajax":{
-                 url:"pages/runnerfetch_ajax.php",
+                 url:"pages/clubfetch_ajax.php",
                  type:"POST"
                 },
                 "columnDefs":[
               	   {
-              	    "targets":[8, 9],
+              	    "targets":[12, 13],
               	    "orderable":false,
               	   },
               	  ],
               
                });
         
-         $(document).on('submit', '#addRunnerForm', function(event){
+         $(document).on('submit', '#addClubForm', function(event){
           event.preventDefault();
-          var firstName = $('#firstname').val();
-          var lastName = $('#lastname').val();
-          var vintage = $('#vintage').val();
-          var gender = $('#gender').val();
-          var club = $('#club').val();
+          var clubName = $('#clubname').val();
+          var clubName2 = $('#clubname2').val();
+          var clubCode = $('#clubcode').val();
+          var street = $('#street').val();
+          var city = $('#city').val();
+          var zip = $('#zip').val();
           var email = $('#email').val();
           var phone = $('#phone').val();
+          var taxid = $('#taxid').val();
+          var vatid = $('#vatid').val();
           var country = $('#country').val();
-          if(firstName != '' && lastName != '' && vintage != '' && gender != '')
+          var webpage = $('#webpage').val();
+          if(clubName != '' && clubCode != '')
           {
            $.ajax({
-            url:"pages/runnerinsert_ajax.php",
+            url:"pages/clubinsert_ajax.php",
             method:'POST',
             data:new FormData(this),
             contentType:false,
@@ -570,8 +607,8 @@ include_once ('pages/function.php');
             {
         		$('#result').html(data);
         		$("#result").delay(2400).fadeOut("slow");
-             $('#addRunnerForm')[0].reset();        
-             $('#addRunner').modal('hide');
+             $('#addClubForm')[0].reset();        
+             $('#addClub').modal('hide');
              $("[data-dismiss=modal]").trigger({ type: "click" });
              dataTable.ajax.reload();
             }
@@ -584,25 +621,29 @@ include_once ('pages/function.php');
          });
          
          $(document).on('click', '.update', function(){
-          var runner_id = $(this).attr("id");
+          var club_id = $(this).attr("id");
           $.ajax({
-           url:"pages/runnerfetch_single.php",
+           url:"pages/clubfetch_single.php",
            method:"POST",
-           data:{runner_id:runner_id},
+           data:{club_id:club_id},
            dataType:"json",
            success:function(data)
            {
-            $('#addRunner').modal('show');
-            $('#firstname').val(data.firstName);
-            $('#lastname').val(data.lastName);
-            $('#vintage').val(data.vintage);
-            $('#gender').val(data.gender);
-            $('#club').val(data.club);
+            $('#addClub').modal('show');
+            $('#clubname').val(data.clubname);
+            $('#clubname2').val(data.clubname2);
+            $('#clubcode').val(data.clubcode);
+            $('#street').val(data.street);
+            $('#city').val(data.city);
+            $('#zip').val(data.zip);
             $('#email').val(data.email);
             $('#phone').val(data.phone);
+            $('#taxid').val(data.taxid);
+            $('#vatid').val(data.vatid);
             $('#country').val(data.country_code);
-            $('.modal-title').text("Upravit závodníka");
-            $('#runner_id').val(runner_id);
+            $('#webpage').val(data.webpage);
+            $('.modal-title').text("Upravit klub");
+            $('#club_id').val(club_id);
             $('#action').val("Edit");
             $('#operation').val("Edit");
            }
@@ -610,15 +651,15 @@ include_once ('pages/function.php');
          });
          
          $(document).on('click', '.delete', function(e){
-          var runner_id = $(this).attr("id");
-          SwalDelete(runner_id);
+          var club_id = $(this).attr("id");
+          SwalDelete(club_id);
           e.preventDefault();
          });
         });
-         function SwalDelete(runner_id){
+         function SwalDelete(club_id){
              swal({
-                 title: 'Odstranit závodníka?',
-                 text: "Odstranit závodníka s ID: "+runner_id+" ?",
+                 title: 'Odstranit klub?',
+                 text: "Odstranit klub s ID: "+club_id+" ?",
                  type: 'warning',
                  showCancelButton: true,
                  confirmButtonColor: '#3085d6',
@@ -629,14 +670,14 @@ include_once ('pages/function.php');
                 preConfirm: function() {
                     return new Promise(function(resolve){
                     	$.ajax({
-                            url:'pages/runnerdelete_ajax.php',
+                            url:'pages/clubdelete_ajax.php',
                             method:'POST',
-                            data:{runner_id:runner_id},
+                            data:{club_id:club_id},
                             dataType: 'json'
                     	})
                     	.done(function(response){
                         	swal('Smazáno',response.message, response.status)
-                        	$('#runners-table').DataTable().ajax.reload();
+                        	$('#clubs-table').DataTable().ajax.reload();
                         	
                     	})
                     	.fail(function(){
