@@ -1,7 +1,9 @@
 <?php
+require_once ('oauth.php');
 /* Log out process, unsets and destroys session variables */
 session_start();
 session_unset();
+$gClient->revokeToken();
 session_destroy();
 ?>
 <!DOCTYPE html>

@@ -6,11 +6,11 @@ $faults = []; // pracovní proměnná, do které budeme shromažďovat info o ch
 if (! empty($_POST) && isset($_POST["operation"]) && $_SERVER["REQUEST_METHOD"] == "POST") {
     $_POST['clubname'] = trim(@$_POST['clubname']);
     if (! preg_match("/^[a-zA-Z \.\-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ]{1,70}$/", $_POST['clubname'])) { // preg_match kontroluje pomocí regulárního výrazu
-        $faults[] = 'Je nutné zadat název klubu! Název může obsahovat  písmena, pomlčku, tečku mít délku maximálně 70 znaků.';
+        $faults[] = 'Je nutné zadat název klubu! Název může obsahovat  písmena, pomlčku, tečku a mít délku maximálně 70 znaků.';
     }
     $_POST['clubname2'] = trim(@$_POST['clubname2']);
     if (! preg_match("/^[a-zA-Z \.\-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ]{1,50}$/", @$_POST['clubname2']) && @$_POST['clubname2'] != '') { // preg_match kontroluje pomocí regulárního výrazu
-        $faults[] = 'Cyhbně zadaný druhý název klubu. Název může obsahovat jen písmena, mezeru, pomlčku, tečku a mít délku max. 50 znaků.';
+        $faults[] = 'Chybně zadaný druhý název klubu. Název může obsahovat jen písmena, mezeru, pomlčku, tečku a mít délku max. 50 znaků.';
     }
     $_POST['clubcode'] = trim(@$_POST['clubcode']);
     if (! preg_match("/^[a-zA-Z\-0-9]{3,10}$/", $_POST['clubcode'])) { // preg_match kontroluje pomocí regulárního výrazu

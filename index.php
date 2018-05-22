@@ -5,7 +5,13 @@ date_default_timezone_set('Europe/Prague');
 require_once ('db_connection.php');
 // pristup jen pro prihlaseneho uzivatele
 require 'userrequired.php';
-
+try {
+    $stmt = $conn->prepare("SELECT VINTAGE_ID, NAME FROM RACEVINTAGE;");
+    $stmt->execute();
+    $racevintages = @$stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Oh noes! There's an error in the query!" . $e->getMessage());
+}
 ?>
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
@@ -71,28 +77,42 @@ require 'userrequired.php';
 							class="menu-icon fa fa-dashboard"></i>Dashboard
 					</a></li>
 					<h3 class="menu-title">Závody</h3>
+					<?php
+    foreach ($racevintages as $racevintage) {
+        ?>
 					<!-- /.menu-title -->
 					<li class="menu-item-has-children dropdown"><a href="#"
 						class="dropdown-toggle" data-toggle="dropdown"
 						aria-haspopup="true" aria-expanded="false"> <i
-							class="menu-icon fa fa-laptop"></i>Components
+							class="menu-icon fa fa-laptop"></i><?= htmlspecialchars($racevintage['NAME'])?>
 					</a>
 						<ul class="sub-menu children dropdown-menu">
-							<li><i class="fa fa-puzzle-piece"></i><a href="ui-buttons.html">Informace</a></li>
-							<li><i class="fa fa-id-badge"></i><a href="ui-badges.html">Kategorie</a></li>
-							<li><i class="fa fa-id-card-o"></i><a href="ui-tabs.html">Registrace</a></li>
-							<li><i class="fa fa-money"></i><a href="ui-tabs.html">Platby</a></li>
+							<li><i class="fa fa-puzzle-piece"></i><a
+								href="information.php?id=<?= htmlspecialchars($racevintage['VINTAGE_ID'])?>">Informace</a></li>
+							<li><i class="fa fa-id-badge"></i><a
+								href="categories.php?id=<?= htmlspecialchars($racevintage['VINTAGE_ID'])?>">Kategorie</a></li>
+							<li><i class="fa fa-id-card-o"></i><a
+								href="registartions.php?id=<?= htmlspecialchars($racevintage['VINTAGE_ID'])?>">Registrace</a></li>
+							<li><i class="fa fa-money"></i><a
+								href="payments.php?id=<?= htmlspecialchars($racevintage['VINTAGE_ID'])?>">Platby</a></li>
 							<li><i class="fa fa-share-square-o"></i><a
-								href="ui-social-buttons.html">Dopňkové služby</a></li>
-							<li><i class="fa  fa-rss"></i><a href="rfidreader.php">Čtečka
+								href="additionalservices.php?id=<?= htmlspecialchars($racevintage['VINTAGE_ID'])?>">Dopňkové
+									služby</a></li>
+							<li><i class="fa  fa-rss"></i><a
+								href="rfidreader.php?id=<?= htmlspecialchars($racevintage['VINTAGE_ID'])?>">Čtečka
 									RFID</a></li>
-							<li><i class="fa fa-list"></i><a href="ui-cards.html">Startovní
+							<li><i class="fa fa-list"></i><a
+								href="startlists.php?id=<?= htmlspecialchars($racevintage['VINTAGE_ID'])?>">Startovní
 									listina</a></li>
-							<li><i class="fa fa-list-alt"></i><a href="ui-alerts.html">Výsledková
+							<li><i class="fa fa-list-alt"></i><a
+								href="resultlists.php?id=<?= htmlspecialchars($racevintage['VINTAGE_ID'])?>">Výsledková
 									listina</a></li>
-							<li><i class="fa fa-microphone"></i><a href="ui-progressbar.html">Komentátor</a></li>
-							<li><i class="fa fa-bar-chart-o"></i><a href="ui-modals.html">Statistiky</a></li>
+							<li><i class="fa fa-microphone"></i><a
+								href="speaker.php?id=<?= htmlspecialchars($racevintage['VINTAGE_ID'])?>">Komentátor</a></li>
+							<li><i class="fa fa-bar-chart-o"></i><a
+								href="statistics.php?id=<?= htmlspecialchars($racevintage['VINTAGE_ID'])?>">Statistiky</a></li>
 						</ul></li>
+						<?php } ?>
 
 					<h3 class="menu-title">Adresář</h3>
 					<!-- /.menu-title -->
@@ -235,11 +255,11 @@ require 'userrequired.php';
 						</a>
 
 						<div class="user-menu dropdown-menu">
-							<a class="nav-link" href="#"><i class="fa fa- user"></i>My
-								Profile</a> <a class="nav-link" href="#"><i class="fa fa- user"></i>Notifications
+							<a class="nav-link" href="profile.php"><i class="fa fa- user"></i>Můj
+								profil</a> <a class="nav-link" href="#"><i class="fa fa- user"></i>Notifications
 								<span class="count">13</span></a> <a class="nav-link" href="#"><i
 								class="fa fa -cog"></i>Settings</a> <a class="nav-link"
-								href="logout.php"><i class="fa fa-power -off"></i>Logout</a>
+								href="logout.php"><i class="fa fa-power -off"></i>Odhlásit se</a>
 						</div>
 					</div>
 

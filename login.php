@@ -1,52 +1,71 @@
 <?php
-require_once ('db_connection.php');
 session_start();
 date_default_timezone_set('Europe/Prague');
+require_once ('db_connection.php');
+require_once ('oauth.php');
+$loginGUrl = $gClient->createAuthUrl();
 /* User login process, checks if user exists and password is correct */
 $faults = []; // pracovní proměnná, do které budeme shromažďovat info o chybách
 if (! empty($_POST) && isset($_POST['signin']) && $_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Escape username to protect against SQL injections
-    try {
-        $username = $_POST['username'];
-        $stmt = $conn->prepare("SELECT * FROM LOGIN WHERE USERNAME = :USERNAME AND ACTIVE = 1 LIMIT 1");
-        $stmt->bindParam(":USERNAME", $username);
-        $stmt->execute();
-    } catch (Exception $e) {
-        die("Oh noes! There's an error in the query!" . $e->getMessage());
+    $username = trim(@$_POST['username']);
+    if (! preg_match("/^[a-zA-Z0-9\-\.]{1,30}$/", $username)) { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat uživatelské jméno! Uživatelské jméno může obsahovat  písmena a číslice, pomlčku, tečku a mít délku maximálně 30 znaků.';
     }
-    if ($stmt->fetchColumn() == 0) { // User doesn't exist
-        $_SESSION['message'] = "Uživatel s tímto uživatelským jménem neexistuje!";
-        header("location: login.php?success=wronguser");
-        exit();
-    } else { // User exists
+    if (empty($faults)) {
         try {
-            $stmt = $conn->prepare("SELECT * FROM LOGIN WHERE USERNAME = :USERNAME AND ACTIVE = 1 LIMIT 1");
+            $stmt = $conn->prepare("SELECT * FROM LOGIN WHERE USERNAME = :USERNAME AND ACTIVE = 1 LIMIT 1;");
             $stmt->bindParam(":USERNAME", $username);
             $stmt->execute();
-        } catch (PDOException $e) {
+        } catch (Exception $e) {
             die("Oh noes! There's an error in the query!" . $e->getMessage());
         }
-        
-        $user = @$stmt->fetchAll(PDO::FETCH_ASSOC)[0];
-        if (password_verify(trim($_POST['password']), $user['PASSWORD'])) {
-            
-            $_SESSION['userID'] = $user['LOGIN_ID'];
-            $_SESSION['email'] = $user['EMAIL'];
-            $_SESSION['username'] = $user['USERNAME'];
-            $_SESSION['firstName'] = $user['FIRSTNAME'];
-            $_SESSION['lastName'] = $user['LASTNAME'];
-            $_SESSION['active'] = $user['ACTIVE'];
-            $_SESSION['lastLogin'] = date("Y-m-d H:i:s");
-            
-            // This is how we'll know the user is logged in
-            $_SESSION['logged_in'] = true;
-            header("location: index.php");
-        } else {
-            $_SESSION['message'] = "Zadal jsi chybné heslo, zkus to znovu!";
-            header("location: login.php?success=wrongpassword");
+        if ($stmt->fetchColumn() == 0) { // User doesn't exist
+            $_SESSION['message'] = "Uživatel s tímto uživatelským jménem neexistuje!";
+            header("location: login.php?success=wronguser");
             exit();
+        } else { // User exists
+            try {
+                $stmt = $conn->prepare("SELECT * FROM LOGIN WHERE USERNAME = :USERNAME AND ACTIVE = 1 LIMIT 1;");
+                $stmt->bindParam(":USERNAME", $username);
+                $stmt->execute();
+            } catch (PDOException $e) {
+                die("Oh noes! There's an error in the query!" . $e->getMessage());
+            }
+            
+            $user = @$stmt->fetchAll(PDO::FETCH_ASSOC)[0];
+            if (password_verify(trim($_POST['password']), $user['PASSWORD'])) {
+                
+                $_SESSION['userID'] = $user['LOGIN_ID'];
+                $_SESSION['email'] = $user['EMAIL'];
+                $_SESSION['username'] = $user['USERNAME'];
+                $_SESSION['firstName'] = $user['FIRSTNAME'];
+                $_SESSION['lastName'] = $user['LASTNAME'];
+                $_SESSION['active'] = $user['ACTIVE'];
+                $_SESSION['lastLogin'] = date("Y-m-d H:i:s");
+                
+                try {
+                    $stmt = $conn->prepare("UPDATE LOGIN SET LASTLOGIN = :LASTLOGIN WHERE LOGIN_ID = :LOGIN_ID;");
+                    $stmt->bindParam(":LASTLOGIN", $_SESSION['lastLogin']);
+                    $stmt->bindParam(":LOGIN_ID", $_SESSION['userID']);
+                    $stmt->execute();
+                } catch (PDOException $e) {
+                    die("Oh noes! There's an error in the query!" . $e->getMessage());
+                }
+                
+                // This is how we'll know the user is logged in
+                $_SESSION['logged_in'] = true;
+                header("location: index.php");
+            } else {
+                $_SESSION['message'] = "Zadal jsi chybné heslo, zkus to znovu!";
+                header("location: login.php?success=wrongpassword");
+                exit();
+            }
         }
+    } else {
+        header("location: login.php?success=wrongusername");
+        exit();
     }
 }
 ?>
@@ -115,6 +134,12 @@ if (! empty($_POST) && isset($_POST['signin']) && $_SERVER["REQUEST_METHOD"] == 
                     echo "</button>";
                     echo "</div>";
                 }
+                if (@$_GET['success'] == 'wrongusername') {
+                    echo '<script src="assets/js/sweetalert2.all.js"></script>';
+                    echo '<script type="text/javascript" language="javascript">';
+                    echo "swal('Ooops!','Uživatelské jméno obsahuje neplatné znaky!','error');";
+                    echo '</script>';
+                }
             }
             ?>
                 <div class="login-logo">
@@ -146,19 +171,19 @@ if (! empty($_POST) && isset($_POST['signin']) && $_SERVER["REQUEST_METHOD"] == 
 						</div>
 						<button type="submit"
 							class="btn btn-success btn-flat m-b-30 m-t-30" name="signin">Přihlásit</button>
-						<!-- 
 						<div class="social-login-content">
 							<div class="social-button">
-								<button type="button"
+								<!--<button type="button"
 									class="btn social facebook btn-flat btn-addon mb-3">
 									<i class="ti-facebook"></i>Sign in with facebook
-								</button>
+								</button>-->
 								<button type="button"
+									onclick="window.location = '<?php echo $loginGUrl;?>'"
 									class="btn social twitter btn-flat btn-addon mt-2">
-									<i class="ti-twitter"></i>Sign in with twitter
+									<i class="ti-google"></i>Sign in with google
 								</button>
 							</div>
-						</div>  -->
+						</div>
 						<div class="register-link m-t-15 text-center">
 							<p>
 								Nemáš ještě účet ? <a href="register.php" title="Registration">
@@ -176,6 +201,7 @@ if (! empty($_POST) && isset($_POST['signin']) && $_SERVER["REQUEST_METHOD"] == 
 	<script src="assets/js/popper.min.js"></script>
 	<script src="assets/js/plugins.js"></script>
 	<script src="assets/js/main.js"></script>
+	<script src="assets/js/sweetalert2.all.js"></script>
 
 
 </body>
