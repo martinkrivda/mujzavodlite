@@ -16,6 +16,7 @@ if (isset($_POST["runner_id"])) {
         $output["email"] = htmlspecialchars($row["EMAIL"]);
         $output["phone"] = htmlspecialchars($row["PHONE"]);
         $output["country_code"] = htmlspecialchars($row["COUNTRY_CODE"]);
+        $output["lastupdated"] = htmlspecialchars($row["LASTUPDATED"]);
     }
     echo json_encode($output);
 }

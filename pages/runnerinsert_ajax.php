@@ -62,18 +62,42 @@ if (! empty($_POST) && isset($_POST["operation"]) && $_SERVER["REQUEST_METHOD"] 
             }
             if ($_POST["operation"] == "Edit") {
                 try {
-                    $stmt = $conn->prepare("UPDATE RUNNER SET FIRSTNAME = :FIRSTNAME, LASTNAME = :LASTNAME, VINTAGE = :VINTAGE, GENDER = :GENDER, EMAIL = :EMAIL, PHONE = :PHONE, COUNTRY_CODE = :COUNTRY_CODE WHERE RUNNER_ID = :RUNNER_ID");
-                    $stmt->bindParam(':FIRSTNAME', $_POST["firstname"], PDO::PARAM_STR);
-                    $stmt->bindParam(':LASTNAME', $_POST["lastname"], PDO::PARAM_STR);
-                    $stmt->bindParam(':VINTAGE', $_POST["vintage"], PDO::PARAM_INT);
-                    $stmt->bindParam(':GENDER', $_POST["gender"], PDO::PARAM_STR);
-                    $stmt->bindParam(':EMAIL', $_POST["email"], PDO::PARAM_STR);
-                    $stmt->bindParam(':PHONE', $_POST["phone"], PDO::PARAM_STR);
-                    $stmt->bindParam(':COUNTRY_CODE', $_POST["country"], PDO::PARAM_STR);
+                    $stmt = $conn->prepare("SELECT LASTUPDATED FROM RUNNER WHERE RUNNER_ID = :RUNNER_ID");
                     $stmt->bindParam(':RUNNER_ID', $_POST["runner_id"], PDO::PARAM_INT);
-                    $result = $stmt->execute();
+                    $stmt->execute();
+                    $runnerexist = $stmt->fetch();
+                    if (! $runnerexist) {
+                        die("Nemohu nalézt závodníka!");
+                    }
                 } catch (PDOException $e) {
                     die("Error: " . $e->getMessage());
+                } finally {
+                    $stmt = $conn->prepare("SELECT LASTUPDATED FROM RUNNER WHERE RUNNER_ID = :RUNNER_ID");
+                    $stmt->bindParam(':RUNNER_ID', $_POST["runner_id"], PDO::PARAM_INT);
+                    $stmt->execute();
+                    $current_last_updated_at = $stmt->fetchColumn();
+                }
+                
+                if ($_POST['lastupdated'] != $current_last_updated_at) {
+                    echo '<script src="assets/js/sweetalert2.all.js"></script>';
+                    echo '<script type="text/javascript" language="javascript">';
+                    echo "swal('Pozor!','Závodníka s tímto ID někdo mezitím editoval!','warning');";
+                    echo '</script>';
+                } else {
+                    try {
+                        $stmt = $conn->prepare("UPDATE RUNNER SET FIRSTNAME = :FIRSTNAME, LASTNAME = :LASTNAME, VINTAGE = :VINTAGE, GENDER = :GENDER, EMAIL = :EMAIL, PHONE = :PHONE, COUNTRY_CODE = :COUNTRY_CODE, LASTUPDATED=now() WHERE RUNNER_ID = :RUNNER_ID");
+                        $stmt->bindParam(':FIRSTNAME', $_POST["firstname"], PDO::PARAM_STR);
+                        $stmt->bindParam(':LASTNAME', $_POST["lastname"], PDO::PARAM_STR);
+                        $stmt->bindParam(':VINTAGE', $_POST["vintage"], PDO::PARAM_INT);
+                        $stmt->bindParam(':GENDER', $_POST["gender"], PDO::PARAM_STR);
+                        $stmt->bindParam(':EMAIL', $_POST["email"], PDO::PARAM_STR);
+                        $stmt->bindParam(':PHONE', $_POST["phone"], PDO::PARAM_STR);
+                        $stmt->bindParam(':COUNTRY_CODE', $_POST["country"], PDO::PARAM_STR);
+                        $stmt->bindParam(':RUNNER_ID', $_POST["runner_id"], PDO::PARAM_INT);
+                        $result = $stmt->execute();
+                    } catch (PDOException $e) {
+                        die("Error: " . $e->getMessage());
+                    }
                 }
                 if (! empty($result)) {
                     echo "<div class='sufee-alert alert with-close alert-success alert-dismissible fade show'>";

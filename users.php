@@ -7,12 +7,143 @@ require_once ('db_connection.php');
 require 'userrequired.php';
 include_once ('pages/function.php');
 try {
-    $stmt = $conn->prepare("SELECT VINTAGE_ID, NAME FROM RACEVINTAGE;");
+    $stmt = $conn->prepare("SELECT VINTAGE_ID, NAME FROM RACEVINTAGE");
     $stmt->execute();
     $racevintages = @$stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     die("Oh noes! There's an error in the query!" . $e->getMessage());
 }
+try {
+    $stmt = $conn->prepare("SELECT LOGIN_ID, FIRSTNAME, LASTNAME, USERNAME, LASTLOGIN FROM LOGIN");
+    $stmt->execute();
+    $users = @$stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Oh noes! There's an error in the query!" . $e->getMessage());
+}
+try {
+    $stmt = $conn->prepare("SELECT * FROM ROLE");
+    $stmt->execute();
+    $roles = @$stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Oh noes! There's an error in the query!" . $e->getMessage());
+}
+try {
+    $stmt = $conn->prepare("SELECT * FROM USERROLE");
+    $stmt->execute();
+    $userroles = @$stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (PDOException $e) {
+    die("Oh noes! There's an error in the query!" . $e->getMessage());
+}
+
+function validateDate($date, $format = 'Y-m-d H:i:s')
+{
+    $d = DateTime::createFromFormat($format, $date);
+    return $d && $d->format($format) == $date;
+}
+if (! empty($_POST) && $_POST['operation'] == 'AddVintage' && $_SERVER["REQUEST_METHOD"] == "POST") {
+    $faults = []; // pracovní proměnná, do které budeme shromažďovat info o chybách
+    $_POST['vintagename'] = trim(@$_POST['vintagename']);
+    if (! preg_match("/^[a-zA-Z \.\-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ0-9]{1,70}$/", $_POST['vintagename'])) { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat název ročníku! Jméno může obsahovat jen písmena, mezeru a pomlčku a mít délku max. 70 znaků.';
+    }
+    $_POST['vintage'] = trim(@$_POST['vintage']);
+    if (! preg_match("/^\d{1,4}$/", $_POST['vintage'])) { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat nčíslo ročníku! Pořadové číslo musí obsahovat 1 až 4 číslice.';
+    }
+    $_POST['race'] = trim(@$_POST['race']);
+    if (! preg_match("/^\d{1,}$/", $_POST['race'])) { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné vybrat závod!';
+    }
+    $_POST['date'] = date('Y-m-d', strtotime(trim(@$_POST['date'])));
+    if (! validateDate($_POST['date'], 'Y-m-d')) { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat datum závodu!';
+    }
+    $_POST['firststart'] = date('H:i', strtotime(trim(@$_POST['firststart'])));
+    if (! validateDate($_POST['firststart'], 'H:i')) { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat čas startu závodu!';
+    }
+    $_POST['location'] = trim(@$_POST['location']);
+    if (! preg_match("/^[a-zA-Z \.\-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ0-9]{1,50}$/", $_POST['location'])) { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat místo konání závodu! Lokace může obsahovat jen písmena, mezeru a pomlčku a mít délku max. 50 znaků.';
+    }
+    $_POST['gps'] = trim(@$_POST['gps']);
+    if (! preg_match("/^(\-?\d+(\.\d+)?)N?,\s*(\-?\d+(\.\d+)?)E?$/", $_POST['gps']) && @$_POST['gps'] != '') { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat souřadnice ve správném formátu.';
+    }
+    $_POST['presentation'] = date('Y-m-d H:i', strtotime(trim(@$_POST['presentation'])));
+    if (! validateDate($_POST['presentation'], 'Y-m-d H:i') && @$_POST['presentation'] != '') { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat čas startu závodu!';
+    }
+    $_POST['webpage'] = trim(@$_POST['webpage']);
+    if (! preg_match("/^(http:|https:)\/\/[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+$/", @$_POST['webpage']) && @$_POST['webpage'] != '') { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Webová stránka obsahuje nepovolené znaky!';
+    }
+    $_POST['entrydate1'] = date('Y-m-d H:i:s', strtotime(trim(@$_POST['entrydate1'])));
+    if (! validateDate($_POST['entrydate1'], 'Y-m-d H:i:s') && @$_POST['entrydate1'] != '') { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat datum přihlášek!';
+    }
+    $_POST['competition'] = trim(@$_POST['competition']);
+    if (! preg_match("/^[a-zA-Z \-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ\.]{1,155}$/", $_POST['competition']) && @$_POST['competition'] != '') { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat název soutěže! Soutěž může obsahovat jen písmena, mezeru a pomlčku a mít délku max. 155 znaků.';
+    }
+    $_POST['eventdirector'] = trim(@$_POST['eventdirector']);
+    if (! preg_match("/^[a-zA-Z \-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ]{1,100}$/", $_POST['eventdirector']) && @$_POST['eventdirector'] != '') { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat jméno ředitele závodu! Jméno může obsahovat jen písmena, mezeru a pomlčku a mít délku max. 100 znaků.';
+    }
+    $_POST['mainreferee'] = trim(@$_POST['mainreferee']);
+    if (! preg_match("/^[a-zA-Z \-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ]{1,100}$/", $_POST['mainreferee']) && @$_POST['mainreferee'] != '') { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat jméno hlavního rozhodčího! Jméno může obsahovat jen písmena, mezeru a pomlčku a mít délku max. 100 znaků.';
+    }
+    $_POST['entriesmanager'] = trim(@$_POST['entriesmanager']);
+    if (! preg_match("/^[a-zA-Z \-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ]{1,100}$/", $_POST['entriesmanager']) && @$_POST['entriesmanager'] != '') { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat jméno zpracovatele přihlášek! Jméno může obsahovat jen písmena, mezeru a pomlčku a mít délku max. 100 znaků.';
+    }
+    $_POST['jury1'] = trim(@$_POST['jury1']);
+    if (! preg_match("/^[a-zA-Z \-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ]{1,50}$/", $_POST['jury1']) && @$_POST['jury1'] != '') { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat jméno JURY! Jméno může obsahovat jen písmena, mezeru a pomlčku a mít délku max. 100 znaků.';
+    }
+    $_POST['jury2'] = trim(@$_POST['jury2']);
+    if (! preg_match("/^[a-zA-Z \-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ]{1,50}$/", $_POST['jury2']) && @$_POST['jury2'] != '') { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat jméno JURY! Jméno může obsahovat jen písmena, mezeru a pomlčku a mít délku max. 100 znaků.';
+    }
+    $_POST['jury3'] = trim(@$_POST['jury3']);
+    if (! preg_match("/^[a-zA-Z \-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ]{1,50}$/", $_POST['jury3']) && @$_POST['jury3'] != '') { // preg_match kontroluje pomocí regulárního výrazu
+        $faults[] = 'Je nutné zadat jméno JURY! Jméno může obsahovat jen písmena, mezeru a pomlčku a mít délku max. 100 znaků.';
+    }
+    if (empty($faults)) {
+        // pokud nebyly nalezeny chyby, tak uložíme získaná data a provedeme redirect
+        if (isset($_POST["operation"])) {
+            if ($_POST["operation"] == "AddVintage") {
+                try {
+                    $stmt = $conn->prepare("INSERT INTO RACEVINTAGE (NAME, VINTAGE, RACE_ID, DATE, FIRSTSTART, LOCATION, GPS, PRESENTATION, WEB, ENTRYDATE1, COMPETITION, EVENTDIRECTOR, MAINREFEREE, ENTRIESMANAGER, JURY1, JURY2, JURY3) VALUES (:NAME, :VINTAGE, :RACE_ID, :DATE, :FIRSTSTART, :LOCATION, :GPS, :PRESENTATION, :WEB, :ENTRYDATE1, :COMPETITION, :EVENTDIRECTOR, :MAINREFEREE, :ENTRIESMANAGER, :JURY1, :JURY2, :JURY3)");
+                    $stmt->bindParam(':NAME', $_POST["vintagename"], PDO::PARAM_STR);
+                    $stmt->bindParam(':VINTAGE', $_POST["vintage"], PDO::PARAM_INT);
+                    $stmt->bindParam(':RACE_ID', $_POST["race"], PDO::PARAM_INT);
+                    $stmt->bindParam(':DATE', $_POST["date"], PDO::PARAM_STR);
+                    $stmt->bindParam(':FIRSTSTART', $_POST["firststart"], PDO::PARAM_STR);
+                    $stmt->bindParam(':LOCATION', $_POST["location"], PDO::PARAM_STR);
+                    $stmt->bindParam(':GPS', $_POST["gps"], PDO::PARAM_STR);
+                    $stmt->bindParam(':PRESENTATION', $_POST["presentation"], PDO::PARAM_STR);
+                    $stmt->bindParam(':WEB', $_POST["webpage"], PDO::PARAM_STR);
+                    $stmt->bindParam(':ENTRYDATE1', $_POST["entrydate1"], PDO::PARAM_STR);
+                    $stmt->bindParam(':COMPETITION', $_POST["competition"], PDO::PARAM_STR);
+                    $stmt->bindParam(':EVENTDIRECTOR', $_POST["eventdirector"], PDO::PARAM_STR);
+                    $stmt->bindParam(':MAINREFEREE', $_POST["mainreferee"], PDO::PARAM_STR);
+                    $stmt->bindParam(':ENTRIESMANAGER', $_POST["entriesmanager"], PDO::PARAM_STR);
+                    $stmt->bindParam(':JURY1', $_POST["jury1"], PDO::PARAM_STR);
+                    $stmt->bindParam(':JURY2', $_POST["jury2"], PDO::PARAM_STR);
+                    $stmt->bindParam(':JURY3', $_POST["jury3"], PDO::PARAM_STR);
+                    $result = $stmt->execute();
+                    header("location: races.php?newvintage=success");
+                    exit();
+                } catch (PDOException $e) {
+                    die("Error: " . $e->getMessage());
+                }
+            }
+        }
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
@@ -299,7 +430,7 @@ try {
 			<div class="col-sm-4">
 				<div class="page-header float-left">
 					<div class="page-title">
-						<h1>Evidence závodníků</h1>
+						<h1>Uživatelská práva</h1>
 					</div>
 				</div>
 			</div>
@@ -308,8 +439,8 @@ try {
 					<div class="page-title">
 						<ol class="breadcrumb text-right">
 							<li><a href="index.php">Dashboard</a></li>
-							<li><a href="#">Adresář</a></li>
-							<li class="active">Závodníci</li>
+							<li><a href="#">Nastavení</a></li>
+							<li class="active">Uživatelé</li>
 						</ol>
 					</div>
 				</div>
@@ -323,171 +454,87 @@ try {
 					<div class="col-md-12">
 						<div class="card">
 							<div class="card-header">
-								<strong class="card-title">Závodníci</strong>
+								<strong class="card-title">Uživatelé</strong>
 							</div>
 							<div class="card-body">
+								<?php
+        if (! empty($faults)) {
+            foreach ($faults as $fault) {
+                echo "<div class='sufee-alert alert with-close alert-danger alert-dismissible fade show'>";
+                echo "<span class='badge badge-pill badge-danger'>Chyba</span>";
+                echo $fault;
+                echo "<button type='button' class='close' data-dismiss='alert' aria-label='Close'>";
+                echo "<span aria-hidden='true'>&times;</span>";
+                echo "</button>";
+                echo "</div>";
+            }
+        }
+        if (isset($_GET['newvintage']) && @$_GET['newvintage'] == 'success') {
+            echo '<script src="assets/js/sweetalert2.all.js"></script>';
+            echo '<script type="text/javascript" language="javascript">';
+            echo "swal('Hotovo!','Uživatel byl úspěšně přidán do databáze!','success');";
+            echo '</script>';
+        }
+        ?>
 								<span id="result"></span>
 								<!-- Button trigger modal -->
-								<button type="button" id="addRunnerBtn"
-									class="btn btn-secondary mb-1" data-toggle="modal"
-									data-target="#addRunner">
-									<i class="fa fa-plus"></i> Přidat závodníka
+								<button type="button" id="addUserBtn"
+									class="btn btn-secondary mb-1" onclick="window.location = 'register.php'">
+									<i class="fa fa-plus"></i> Přidat uživatele
 								</button>
 								<!-- Table with runners -->
 								<div class="table-responsive">
-									<table id="runners-table"
-										class="table table-striped table-bordered table-hover">
+									<table id="users-table" class="table table-striped table-hover">
 										<thead>
 											<tr class="tableheader">
 												<th>ID</th>
+												<th>Uživatelské jméno</th>
 												<th>Jméno</th>
-												<th>Příjmení</th>
-												<th>Ročník</th>
-												<th>Pohlaví</th>
-												<th>Země</th>
-												<th>E-mail</th>
-												<th>Telefon</th>
-												<th width="5%">Upravit</th>
-												<th width="5%">Smazat</th>
+												<?php foreach($roles as $role) {?>
+												<th id="<?= htmlspecialchars($role['ROLE_ID']) ?>"><?= ucfirst (strtolower(htmlspecialchars($role['ROLEDESCRIPTION']))) ?></th>
+												<?php } ?>
+												<th>Poslední přihlášení</th>
 											</tr>
 										</thead>
-										<tbody></tbody>
+										<tbody id="tbodyuser">
+											<?php foreach($users as $user) {?>
+												<tr>
+												<td><?= htmlspecialchars($user['LOGIN_ID']) ?></td>
+												<td><?= htmlspecialchars($user['USERNAME']) ?></td>
+												<td><?= htmlspecialchars($user['LASTNAME']) ?> <?= htmlspecialchars($user['FIRSTNAME']) ?></td>
+												<?php foreach($roles as $role) {?>
+													<?php foreach($userroles as $userrole) {
+														if ($userrole['ROLE_ID'] == $role['ROLE_ID'] && $userrole['LOGIN_ID'] == $user['LOGIN_ID']){
+														
+														?>
+														<td><label class="switch switch-text switch-info switch-pill"><input
+								type="checkbox" class="switch-input" checked="true"> <span
+								data-on="On" data-off="Off" class="switch-label"></span> <span
+								class="switch-handle"></span></label></td>
+
+												<?php }else{
+
+													?>
+													<td><label class="switch switch-text switch-info switch-pill"><input
+								type="checkbox" class="switch-input" checked="false"> <span
+								data-on="On" data-off="Off" class="switch-label"></span> <span
+								class="switch-handle"></span></label></td>
+												<?php }}?>
+												<?php } ?>
+												<td><?= htmlspecialchars($user['LASTLOGIN']) ?></td>
+											</tr>
+												<?php } ?>
+										</tbody>
 									</table>
 									<div id="output"></div>
 								</div>
 							</div>
-							<div class="modal fade" id="addRunner" tabindex="-1"
-								role="dialog" aria-labelledby="addRunnerLabel"
-								aria-hidden="true">
-								<div class="modal-dialog modal-lg" role="document">
-									<div class="modal-content">
-										<div class="modal-header">
-											<h5 class="modal-title" id="addRunnerLabel">Přidat závodníka</h5>
-											<button type="button" class="close" data-dismiss="modal"
-												aria-label="Close">
-												<span aria-hidden="true">&times;</span>
-											</button>
-										</div>
-										<form name="addRunnerForm" id="addRunnerForm" action=""
-											method="POST" enctype="multipart/form-data">
-											<div class="modal-body">
-												<div class="row">
-													<div class="col-6">
-														<div class="form-group">
-															<label for="firstname" class=" form-control-label">Křestní
-																jméno</label><input type="text" id="firstname"
-																name="firstname" placeholder="Vložte jméno"
-																pattern="[a-zA-Z \-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ]{1,50}"
-																value="<?php echo htmlspecialchars(@$_POST['firstname']);?>"
-																class="form-control" maxlength="50" required />
-														</div>
-													</div>
-													<div class="col-6">
-														<div class="form-group">
-															<label for="lastname" class=" form-control-label">Příjmení</label><input
-																type="text" id="lastname" name="lastname"
-																placeholder="Vložte příjmení"
-																pattern="[a-zA-Z \-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ]{1,100}"
-																value="<?php echo htmlspecialchars(@$_POST['lastname']);?>"
-																class="form-control" maxlength="100" required />
-														</div>
-													</div>
-												</div>
-												<div class="row">
-													<div class="col-3">
-														<div class="form-group">
-															<label for="vintage" class=" form-control-label">Ročník</label><input
-																type="number" id="vintage" name="vintage" min="1900"
-																max="<?php echo date("Y"); ?>" step="1"
-																placeholder="Rok narození"
-																value="<?php echo htmlspecialchars(@$_POST['vintage']);?>"
-																class="form-control" required />
-														</div>
-													</div>
-													<div class="col-4">
 
-
-														<div class="form-group">
-															<label for="gender" class="form-control-label">Pohlaví</label><select
-																name="gender" id="gender"
-																style="height: calc(2.25rem + 2px);"
-																class="form-control">
-																<option value="0">Prosím vyberte</option>
-																<option value="Male">Muž</option>
-																<option value="Female">Žena</option>
-															</select>
-
-														</div>
-													</div>
-													<div class="col-5">
-														<div class="form-group">
-															<label for="club" class="form-control-label">Klub</label><input
-																type="text" id="club" name="club" list="clubs"
-																pattern="[a-zA-Z \-ěščřžýáíéóúůďťňĎŇŤŠČŘŽÝÁÍÉÚŮ\.]{1,70}"
-																placeholder="Vložte název klubu"
-																value="<?php echo htmlspecialchars(@$_POST['club']);?>"
-																class="form-control" maxlength="70" />
-															<datalist id="clubs">
-																	<?php echo fill_club(); ?>
-																</datalist>
-														</div>
-													</div>
-												</div>
-												<div class="row">
-													<div class="col-8">
-														<div class="form-group">
-															<label for="email" class="form-control-label">E-mail</label><input
-																type="email" id="email" name="email"
-																placeholder="Vložte email"
-																value="<?php echo htmlspecialchars(@$_POST['email']);?>"
-																class="form-control" maxlength="100" />
-														</div>
-													</div>
-													<div class="col-4">
-														<div class="form-group">
-															<label for="phone" class="form-control-label">Telefon</label><input
-																type="tel" id="phone" name="phone"
-																placeholder="Vložte telefon"
-																value="<?php echo htmlspecialchars(@$_POST['phone']);?>"
-																class="form-control" maxlength="13" />
-														</div>
-													</div>
-												</div>
-												<div class="row">
-													<div class="col-5">
-														<div class="form-group">
-															<label for="country" class="form-control-label">Země</label>
-															<select name="country" id="country"
-																style="height: calc(2.25rem + 2px);"
-																class="form-control">
-																<option value="0">Prosím vyberte</option>
-																<?php echo fill_country(); ?>
-														</select>
-														</div>
-													</div>
-												</div>
-											</div>
-											<div class="modal-footer">
-												<input type="hidden" name="runner_id" id="runner_id"
-													value="" /> <input type="hidden" name="operation"
-													id="operation" value="Add" /> <input type="hidden"
-													name="lastupdated" id="lastupdated"
-													value="<?= htmlspecialchars(@$_POST['LASTUPDATED']) ?>">
-												<button type="button" class="btn btn-secondary"
-													data-dismiss="modal">Cancel</button>
-												<button type="submit" id="save" name="save"
-													class="btn btn-primary">Confirm</button>
-											</div>
-										</form>
-									</div>
-								</div>
-							</div>
 						</div>
 					</div>
 
 
 				</div>
-
 			</div>
 			<!-- .animated -->
 			<!--Footer-->
@@ -541,135 +588,5 @@ try {
 	<script src="assets/js/lib/data-table/buttons.colVis.min.js"></script>
 	<script src="assets/js/lib/data-table/datatables-init.js"></script>
 	<script src="assets/js/sweetalert2.all.js"></script>
-
-
-
-	<script type="text/javascript" language="javascript">
-        $(document).ready(function(){     
-        	$('#addRunnerBtn').click(function(){
-        		  $('#addRunnerForm')[0].reset();
-        		  $('.modal-title').text("Přidat závodníka");
-        		  $('#action').val("Add");
-        		  $('#operation').val("Add");
-        		 });
-         
-        	var dataTable = $('#runners-table').DataTable({
-                "processing":true,
-                "serverSide":true,
-                "order":[],
-                "ajax":{
-                 url:"pages/runnerfetch_ajax.php",
-                 type:"POST"
-                },
-                "columnDefs":[
-              	   {
-              	    "targets":[8, 9],
-              	    "orderable":false,
-              	   },
-              	  ],
-              
-               });
-        
-         $(document).on('submit', '#addRunnerForm', function(event){
-          event.preventDefault();
-          var firstName = $('#firstname').val();
-          var lastName = $('#lastname').val();
-          var vintage = $('#vintage').val();
-          var gender = $('#gender').val();
-          var club = $('#club').val();
-          var email = $('#email').val();
-          var phone = $('#phone').val();
-          var country = $('#country').val();
-          if(firstName != '' && lastName != '' && vintage != '' && gender != '')
-          {
-           $.ajax({
-            url:"pages/runnerinsert_ajax.php",
-            method:'POST',
-            data:new FormData(this),
-            contentType:false,
-            processData:false,
-            success:function(data)
-            {
-        		$('#result').html(data);
-        		$("#result").delay(2400).fadeOut("slow");
-             $('#addRunnerForm')[0].reset();        
-             $('#addRunner').modal('hide');
-             $("[data-dismiss=modal]").trigger({ type: "click" });
-             dataTable.ajax.reload();
-            }
-           });
-          }
-          else
-          {
-           alert("Fields are Required");
-          }
-         });
-         
-         $(document).on('click', '.update', function(){
-          var runner_id = $(this).attr("id");
-          $.ajax({
-           url:"pages/runnerfetch_single.php",
-           method:"POST",
-           data:{runner_id:runner_id},
-           dataType:"json",
-           success:function(data)
-           {
-            $('#addRunner').modal('show');
-            $('#firstname').val(data.firstName);
-            $('#lastname').val(data.lastName);
-            $('#vintage').val(data.vintage);
-            $('#gender').val(data.gender);
-            $('#club').val(data.club);
-            $('#email').val(data.email);
-            $('#phone').val(data.phone);
-            $('#country').val(data.country_code);
-            $('.modal-title').text("Upravit závodníka");
-            $('#runner_id').val(runner_id);
-            $('#lastupdated').val(data.lastupdated);
-            $('#action').val("Edit");
-            $('#operation').val("Edit");
-           }
-          })
-         });
-         
-         $(document).on('click', '.delete', function(e){
-          var runner_id = $(this).attr("id");
-          SwalDelete(runner_id);
-          e.preventDefault();
-         });
-        });
-         function SwalDelete(runner_id){
-             swal({
-                 title: 'Odstranit závodníka?',
-                 text: "Odstranit závodníka s ID: "+runner_id+" ?",
-                 type: 'warning',
-                 showCancelButton: true,
-                 confirmButtonColor: '#3085d6',
-                 cancelButtonColor: '#d33',
-                 confirmButtonText: 'Odstranit',
-                 showLoaderOnConfirm: true,
-    
-                preConfirm: function() {
-                    return new Promise(function(resolve){
-                    	$.ajax({
-                            url:'pages/runnerdelete_ajax.php',
-                            method:'POST',
-                            data:{runner_id:runner_id},
-                            dataType: 'json'
-                    	})
-                    	.done(function(response){
-                        	swal('Smazáno',response.message, response.status)
-                        	$('#runners-table').DataTable().ajax.reload();
-                        	
-                    	})
-                    	.fail(function(){
-                        	swal('Oops...', 'Something went wrong with ajax !', 'error');
-                    	});
-                });
-            },
-            allowOutsideClick: false
-         });
-        }
-    </script>
 </body>
 </html>
